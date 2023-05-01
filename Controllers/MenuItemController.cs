@@ -1,9 +1,11 @@
+using System.IO;
 using RedMango_API.Data;
 using RedMango_API.Models;
 using RedMango_API.Utility;
 using RedMango_API.Models.Dto;
 using RedMango_API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace RedMango_API.Controllers
@@ -23,7 +25,7 @@ namespace RedMango_API.Controllers
             _response = new ApiResponse();
         }
 
-//Route for get all menu items 
+        //Route for get all menu items 
         [HttpGet]
         public async Task<IActionResult> GetMenuItems()
         {
@@ -32,7 +34,7 @@ namespace RedMango_API.Controllers
             return Ok(_response);
         }
 
-//Route for getting 1 menu item based on id
+        //Route for getting 1 menu item based on id
         [HttpGet("{id:int}", Name = "GetMenuItem")]
         public async Task<IActionResult> GetMenuItem(int id)
         {
@@ -54,7 +56,7 @@ namespace RedMango_API.Controllers
             return Ok(_response);
         }
     
-//Route to Get/Delete/Upload a new blob
+        //Route to Get/Delete/Upload a new blob
         [HttpPost]
         public async Task<ActionResult<ApiResponse>> CreateMenuItem([FromForm]MenuItemCreateDTO menuItemCreateDTO)
         {
@@ -97,6 +99,58 @@ namespace RedMango_API.Controllers
             return _response;
         }
     
-    
+
+        //Put route to update Manu item
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<ApiResponse>> UpdateMenItem(int id, [FromForm]MenuItemUpdateDTO menuItemUpdateDTO)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    if (menuItemUpdateDTO == null || id != menuItemUpdateDTO.Id)
+                    {
+                        return BadRequest();
+                    }
+
+                    MenuItem menuItemFromDb = await _db.MenuItems.FindAsync(id);
+                    if (menuItemFromDb == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    menuItemFromDb.Name = menuItemUpdateDTO.Name;
+                    menuItemFromDb.Price = menuItemUpdateDTO.Price;
+                    menuItemFromDb.Category = menuItemUpdateDTO.Category;
+                    menuItemFromDb.SpecialTag = menuItemUpdateDTO.SpecialTag;
+                    menuItemFromDb.Description = menuItemUpdateDTO.Description;
+
+                    if(menuItemUpdateDTO.File != null && menuItemUpdateDTO.File.Length > 0)
+                    {
+                        string fileName = $"{Guid.NewGuid()}{Path.GetExtension(menuItemUpdateDTO.File.FileName)}";
+                        await _blobService.DeleteBlob(menuItemFromDb.Image.Split('/').Last(), SD.SD_Storage_Container);
+                        menuItemFromDb.Image = await _blobService.UploadBlob(fileName, SD.SD_Storage_Container, menuItemUpdateDTO.File);
+                    }
+
+                    _db.MenuItems.Update(menuItemFromDb);
+                    _db.SaveChanges();
+
+                    _response.StatusCode=HttpStatusCode.NoContent;
+                    return Ok(_response);
+                }
+                else 
+                {
+                    _response.IsSuccess = false;
+                }
+            }
+            catch (Exception ex) 
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+
+            return _response;
+        }
+
     }
 }
