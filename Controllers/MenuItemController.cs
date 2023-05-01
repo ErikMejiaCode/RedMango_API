@@ -100,7 +100,7 @@ namespace RedMango_API.Controllers
         }
     
 
-        //Put route to update Manu item
+        //Put route to Update Menu item
         [HttpPut("{id:int}")]
         public async Task<ActionResult<ApiResponse>> UpdateMenItem(int id, [FromForm]MenuItemUpdateDTO menuItemUpdateDTO)
         {
@@ -152,5 +152,39 @@ namespace RedMango_API.Controllers
             return _response;
         }
 
+       //Delete route to Delete Menu item
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult<ApiResponse>> DeleteMenItem(int id)
+        {
+            try
+            {
+                if (id == 0)
+                {
+                    return BadRequest();
+                }
+
+                MenuItem menuItemFromDb = await _db.MenuItems.FindAsync(id);
+                if (menuItemFromDb == null)
+                {
+                    return BadRequest();
+                }
+                await _blobService.DeleteBlob(menuItemFromDb.Image.Split('/').Last(), SD.SD_Storage_Container);
+                    
+                int milliseconds = 2000;
+                Thread.Sleep(milliseconds);
+
+                _db.MenuItems.Remove(menuItemFromDb);
+                _db.SaveChanges();
+                _response.StatusCode=HttpStatusCode.NoContent;
+                return Ok(_response);
+                
+            }
+            catch (Exception ex) 
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
     }
 }
