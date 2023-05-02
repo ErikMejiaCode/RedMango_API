@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RedMango_API.Models;
@@ -11,6 +12,8 @@ namespace RedMango_API.Data
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
