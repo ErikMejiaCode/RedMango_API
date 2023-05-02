@@ -1,14 +1,14 @@
-using System.Data.SqlTypes;
+using System.Security.Claims;
+using System.Text;
 using System.Net;
 using RedMango_API.Data;
 using RedMango_API.Models;
 using RedMango_API.Models.Dto;
 using RedMango_API.Utility;
-using RedMango_API.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 
 namespace RedMango_API.Controllers
 {
@@ -115,10 +115,30 @@ namespace RedMango_API.Controllers
             }
 
             //Valid password, we have to generate JWT Token
+            var roles = await _userManager.GetRolesAsync(userFromDb);
+            JwtSecurityTokenHandler tokenHandler = new();
+            byte[] key = Encoding.ASCII.GetBytes(secretKey);
+
+            SecurityTokenDescriptor tokenDescriptor = new()
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("fullName", userFromDb.Name),
+                    new Claim("id", userFromDb.Id.ToString()),
+                    new Claim(ClaimTypes.Email, userFromDb.UserName.ToString()),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            
+            //Generating the token
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
             LoginResponseDTO loginResponse = new()
             {
                 Email = userFromDb.Email,
-                Token = "test"
+                Token = tokenHandler.WriteToken(token)
             };
 
             //If email is null 
