@@ -32,6 +32,7 @@ namespace RedMango_API.Controllers
             _roleManager = roleManager;
         }
 
+        //Path used for registering a user 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDTO model)
         {
@@ -95,5 +96,45 @@ namespace RedMango_API.Controllers
              return BadRequest(_response);
         }
 
+        //Path used for login user in 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
+        {
+            ApplicationUser userFromDb = _db.ApplicationUsers.FirstOrDefault( u => u.UserName.ToLower() == model.UserName.ToLower());
+
+            bool isValid = await _userManager.CheckPasswordAsync(userFromDb, model.Password);
+
+            //If password is invalid 
+            if (isValid == false)
+            {
+                _response.Result = new LoginResponseDTO();
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages.Add("Username or Password is incorrect");
+                return BadRequest(_response);
+            }
+
+            //Valid password, we have to generate JWT Token
+            LoginResponseDTO loginResponse = new()
+            {
+                Email = userFromDb.Email,
+                Token = "test"
+            };
+
+            //If email is null 
+            if (loginResponse.Email == null || string.IsNullOrEmpty(loginResponse.Token))
+            {
+                _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
+                _response.ErrorMessages.Add("Username or Password is incorrect");
+                return BadRequest(_response);
+            }
+
+            //If all is valid
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            _response.Result = loginResponse;
+            return Ok(_response);
+        }
     }
 }
