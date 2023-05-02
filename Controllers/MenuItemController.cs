@@ -41,6 +41,7 @@ namespace RedMango_API.Controllers
             if (id == 0)
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
+                _response.IsSuccess = false;
                 return BadRequest(_response);
             }
 
@@ -48,6 +49,7 @@ namespace RedMango_API.Controllers
             if (menuItem == null)
             {
                 _response.StatusCode = HttpStatusCode.NotFound;
+                _response.IsSuccess = false;
                 return NotFound(_response);
             }
 
@@ -66,6 +68,8 @@ namespace RedMango_API.Controllers
                 {
                     if (menuItemCreateDTO.File == null || menuItemCreateDTO.File.Length == 0)
                     {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
                         return BadRequest();
                     }
                     string fileName = $"{Guid.NewGuid()}{Path.GetExtension(menuItemCreateDTO.File.FileName)}";
@@ -110,12 +114,16 @@ namespace RedMango_API.Controllers
                 {
                     if (menuItemUpdateDTO == null || id != menuItemUpdateDTO.Id)
                     {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
                         return BadRequest();
                     }
 
                     MenuItem menuItemFromDb = await _db.MenuItems.FindAsync(id);
                     if (menuItemFromDb == null)
                     {
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.IsSuccess = false;
                         return BadRequest();
                     }
 
@@ -160,12 +168,16 @@ namespace RedMango_API.Controllers
             {
                 if (id == 0)
                 {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
                     return BadRequest();
                 }
 
                 MenuItem menuItemFromDb = await _db.MenuItems.FindAsync(id);
                 if (menuItemFromDb == null)
                 {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
                     return BadRequest();
                 }
                 await _blobService.DeleteBlob(menuItemFromDb.Image.Split('/').Last(), SD.SD_Storage_Container);
