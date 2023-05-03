@@ -27,16 +27,20 @@ namespace RedMango_API.Controllers
         {
             try 
             {
+                ShoppingCart shoppingCart;
+
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    shoppingCart = new();
                 }
-                ShoppingCart shoppingCart = _db.ShoppingCarts
-                .Include(u => u.CartItems)
-                .ThenInclude(u => u.MenuItem)
-                .FirstOrDefault(u => u.UserId == userId);
-
+                else
+                {
+                    shoppingCart = _db.ShoppingCarts
+                    .Include(u => u.CartItems)
+                    .ThenInclude(u => u.MenuItem)
+                    .FirstOrDefault(u => u.UserId == userId);
+                }
+                 
                 //Calculating cart total
                 if(shoppingCart.CartItems != null && shoppingCart.CartItems.Count > 0)
                 {
