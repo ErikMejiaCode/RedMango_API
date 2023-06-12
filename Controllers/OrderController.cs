@@ -94,7 +94,7 @@ namespace RedMango_API.Controllers
                   ApplicationUserId = orderHeaderDTO.ApplicationUserId,  
                   PickupEmail = orderHeaderDTO.PickupEmail,  
                   PickupName = orderHeaderDTO.PickupName,  
-                  PickupPhoneNumber = orderHeaderDTO.ApplicationUserId,  
+                  PickupPhoneNumber = orderHeaderDTO.PickupPhoneNumber,  
                   OrderTotal = orderHeaderDTO.OrderTotal,  
                   OrderDate = DateTime.Now,  
                   StripedPaymentIntentId = orderHeaderDTO.StripedPaymentIntentId,  
