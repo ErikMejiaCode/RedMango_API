@@ -23,11 +23,11 @@ namespace RedMango_API.Controllers
 
         //Getting orders 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse>> GetOrders(string? userId)
+        public async Task<ActionResult<ApiResponse>> GetOrders(string? userId, string searchString, string status)
         {
             try
             {
-                var orderHeaders = _db.OrderHeaders
+                IEnumerable<OrderHeader> orderHeaders = _db.OrderHeaders
                 .Include(u => u.OrderDetails)
                 .ThenInclude(u => u.MenuItem)
                 .OrderByDescending(u => u.OrderHeaderId);
@@ -36,10 +36,20 @@ namespace RedMango_API.Controllers
                 {
                     _response.Result = orderHeaders.Where(u => u.ApplicationUserId == userId);
                 }
-                else 
+                
+                if(!string.IsNullOrEmpty(searchString))
                 {
-                    _response.Result = orderHeaders;
+                    orderHeaders = orderHeaders.Where(u => u.PickupPhoneNumber.ToLower().Contains(searchString.ToLower()) || u.PickupEmail.Contains(searchString.ToLower()) || u.PickupName.Contains(searchString.ToLower()));
                 }
+
+                if(!string .IsNullOrEmpty(status))
+                {
+                    orderHeaders = orderHeaders.Where(u => u.Status.ToLower() == status.ToLower());
+                }
+
+
+
+
             }
             catch (Exception ex)
             {
