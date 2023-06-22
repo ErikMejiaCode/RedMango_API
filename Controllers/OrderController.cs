@@ -5,6 +5,7 @@ using RedMango_API.Models.Dto;
 using RedMango_API.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Text.Json;
 
 namespace RedMango_API.Controllers
 {
@@ -23,7 +24,7 @@ namespace RedMango_API.Controllers
 
         //Getting orders 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse>> GetOrders(string? userId, string searchString, string status)
+        public async Task<ActionResult<ApiResponse>> GetOrders(string? userId, string searchString, string status, int pageNumber = 1, int pageSize = 5)
         {
             try
             {
@@ -34,7 +35,7 @@ namespace RedMango_API.Controllers
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    _response.Result = orderHeaders.Where(u => u.ApplicationUserId == userId);
+                    orderHeaders = orderHeaders.Where(u => u.ApplicationUserId == userId);
                 }
                 
                 if(!string.IsNullOrEmpty(searchString))
@@ -48,7 +49,19 @@ namespace RedMango_API.Controllers
                 }
 
 
+                Pagination pagination = new()
+                {
+                    CurrentPage = pageNumber,
+                    PageSize = pageSize,
+                    TotalRecords = orderHeaders.Count()
+                };
 
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
+
+
+                _response.Result = orderHeaders.Skip((pageNumber-1)*pageSize).Take(pageSize);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
 
             }
             catch (Exception ex)
